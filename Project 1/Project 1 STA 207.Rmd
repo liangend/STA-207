@@ -1,3 +1,7 @@
+---
+output:
+  html_document: default
+---
 # Assessing the Effect of Reducing Class Size on Math Scores of the First Graders
 
 Team ID: 9
