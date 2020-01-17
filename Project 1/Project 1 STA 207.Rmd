@@ -1,0 +1,415 @@
+# Assessing the Effect of Reducing Class Size on Math Scores of the First Graders
+
+Team ID: 9
+
+Zhikuan Quan (Statistical Modelling)
+
+Daidai Zhang (Model Interpretation)
+
+Wenfeng Chang (Exploratory Data Analysis)
+
+Jinghui Li (Statistical Modelling)
+
+Github repo: https://github.com/zhikuanquan/STA-207.git
+
+## 1. Introduction
+
+### 1.1 Background
+
+Teachers, parents, and policymakers have been interested in reducing class size to improve the performance of students in their early-stage education in the United States due to its potential benefits to improve the attainment of the students in the short-term and long-term. The Student/Teacher Achievement Ratio (STAR) project attracted many researchers' attention because of its large sample size and the nature of the study design, which was funded by the Tennessee General Assembly and conducted in the late 1980s (Word, E.R., 1990). Many early and later follow-up researched showed positive results of attending small size classes. For instance, Pate-Bain (1992) reported that students attending the small classes made up 55% -78% of the top-scoring 10% from kindergarten through third grade, which indicates the positive and cumulative effect of small class size on the performance of K-3 graders. One follow-up research showed that attending smaller class size in primary school can increase the likelihood of earning a college degree by 1.6 percentage and the test-score effects were the excellent predictors for the long-term achievements ( Dynarski, Hyman, & Schanzenbach, 2013). 
+
+To obtain more specific evidence of the effects of small class size on the performance of students, our project is to reassess the effects of reducing class size by examining the relationship between the class size and the math scores of students in the first grade using data from the STAR project. 
+ 
+### 1.2 Statistical Questions of Interest
+
+The primary question of interest is whether the reduced class size associated with better students' math scores compared to large class sizes. To answer the primary question of interest, first, we need to know there are any extreme and missing values. Second, what are the characteristics and distributions of variables that may affect the results of the math test score for the first graders? Third, which model can fit our data? In addition, we need to verify our model through model diagnosis and/or sensitivity test.
+
+## 2. Analysis Plan
+
+### 2.1 Population and Study Design
+
+The STAR study randomly assigned students and teachers into one of three level of class size that including small class (13 to 17 students per teacher), regular class (22 to 25 students per teacher), and regular-with-aide class (22 to 25 students per teacher), which started as the students entering school in kindergarten through the third grade; the schools enrolled in the study had at least one class of each type for proper randomization (Achilles et al, 2008).
+
+We obtain the data from a package called "AER" in R. The data contains 11,598 observations on 47 variables including test scores of reading and math, the treatment groups (small class, regular class, regular class +aide), the characteristics of students (gender, ethnicity, birth quarter, and free-lunch status), the characteristics of teachers (the years of teaching experience, academic degree, career ladder, ethnicity), and the information of schools (Stock & Watson, 2007). For this project, we focus on the Math score of the first grader and the treatment groups.  
+
+### 2.2 Statistical Analysis
+
+#### 2.2.1 Exploratory Data Analysis
+
+To find relative variables that reflect the association of difference of math scores of first graders, it is always a good idea to look at the data values and them summarize or graph them. 
+
+Firstly, we use the summary method in R to summarize the results of quantitative variables like math1(math scores in the first grade), read1(reading scores in the first grade). In this way, we can see the maximum, minimum, median, quantile to check out whether we have extreme values or not. 
+
+Secondly, we explore the relationship between variables by boxplot. In this way, we can understand the characteristics of variables more intuitively and then choose suitable variables to analyze and fit our model. 
+
+Finally, since we want to test the effect of reducing class size on math scores of first graders, we mainly focus on two variables: math1(math scores of first graders) and star1(class size) and then remove the missing values using the list-wise deletion method by R package. 
+
+#### 2.2.2 Statistical Modelling
+```{r, echo=FALSE,include=FALSE}
+## Input the Data: star1(class size) and math1(math scores) 
+library(AER)
+library(knitr)
+data(STAR)
+dat = STAR
+dat = dat[,c(5, 13)]
+# omit the missing values
+dat1 = na.omit(dat)
+```
+
+```{r,echo=FALSE}
+boxplot(split(dat1[,2],dat1[,1]), xlab = "Class Size", ylab = "Math Score",main="Boxplot of Math Scores of First Graders by Class Size")
+```
+
+From the boxplot of math scores of first graders by class size, it seems that the average math scores of 1st grade among three class size are different. The average score in the class of small size is the highest and the average score in the class of regular size is lowest. So, we choose these two variables: math1(math scores of first graders) and star1(class size) to analyze the effect of reducing class size on math scores of the first graders. In the case of randomized experiment design, one-way ANOVA model is suitable to interpret whether there is statistically significant difference of math scores in different class sizes. 
+
+In order to simplify the modeling methods, we make some basic Assumptions as follow:
+
+1. The math scores in the first grade are independent with the scores in kindergarten, which means the math scores in kindergarten cannot influence the scores in the first grade.
+2. The math scores of first graders cannot be influenced by gender, ethnicity, birth quarter, and free-lunch status. The randomized experiment design make sure that the math scores is associated with class size.
+
+```{r,echo=FALSE}
+# draw the histogram of math scores
+hist(dat1[,2],xlab="Math scores", main ="Histogram of Math Scores")
+```
+
+Through the preliminary analysis of data, the distribution of math scores of first graders seems to be bell-shaped. What's more, the histograms of math scores in three class size have overlapped, which means that the variance of math scores in the different class size seems to be similar. Since the study randomly assigned students to small classes, regular classes, and regular classes with aide, it is reasonable to assume that the math scores in different class size are independent.
+
+The assumptions of one-way ANOVA are shown as follow:
+
+1. Normality: That each sample is taken from a normally distributed population;
+2. Homoscedastic: That the variance of math scores in the different class groups should be the same;
+3. Independence: that each sample has been drawn independently of the other samples.
+
+Considering the following model notation:
+
+|    Notation     | Description                                                  |
+| :-------------: | :----------------------------------------------------------- |
+|       $i$       | Different class size: regular size if $i=1$;  small size if $i=2$; regular size with aide if $i=3$. |
+|       $j$       | The index of math scores of the first graders, where $j=1,2,...,n_i$. |
+|      $n_i$      | The number of students in the $i$ -th class, where $n_1+n_2+n_3=n$ and $n$ is the total number of students. |
+|    $Y_{ij}$     | The $j$-th math scores of the first graders in the $i$ -th class. |
+|   $x_{2,ij}$    | The dummy variable that $x_{2,ij}=1$ if the j-th math scores in the small size class($i=2$ ); $x_{2,ij}=0$ otherwise. |
+|   $x_{3,ij}$    | The dummy variable that $x_{3,ij}=1$ if the j-th math scores in the regular size with aide class($i=3$); $x_{3,ij}=0$ otherwise. |
+|      $\mu$      | The baseline intercept under the regular size class(as the reference group). |
+| $\epsilon_{ij}$ | The random error which we cannot measure in the experiment.  |
+
+The mathematical one-way ANOVA model with regression form is given by
+$$
+Y_{ij}=\mu+\beta_2x_{2,ij}+\beta_3x_{3,ij}+\epsilon_{ij}
+$$
+where $i=1,2,3$, and $\beta$ is parameters. In this experiment, the total number of students in first grades is $n=6600$. 
+
+Then we use R to fit the one-way ANOVA model and test the difference of math scores in different class sizes.
+
+```{r,echo=FALSE}
+# Fit the model under the restriction: size "regular" as reference
+fit1 <- lm(math1~star1,data=dat1)
+plot(fit1,2)
+```
+
+Firstly, the original form of data are used to estimate the model parameters with least-square methods. After testing the model assumptions of original model, the normality cannot be satisfied with original model through the Q-Q plot since it seems that the distribution is relatively light-tailed in both sides. The Box-Cox transformation is needed to fix this problem, in order to maximize the log-likelihood in Box-Cox method, we apply log-transformation to the response variable $Y_{ij}$ , the math scores. In the following step, we use $log(Y_{ij})$ as response variable to fit the one-way ANOVA model.
+
+Secondly, when we fit the model, we can apply statistical testing methods to the data. To analyze the family-wise difference of math scores among each class size, the F-test is used with the one-way ANOVA model. 
+
+Finally, we use three pairwise comparisons among 3 class size groups to test pairwise effect of class size and to see which class size had the highest average math scores of first graders . In addition, one test based on the contrast of the difference between the math scores of small size class and the regular size class (regular size and regular size with aide) were conducted, in order and to compare the difference between small size and regular size. In this case, Bonferroni's procedure and Scheffe's procedure were both conducted in order to get more precise confidence intervals to do hypothesis testing. To test the data, 95% confidence intervals were derived to determine wheter the difference exists based on whether the interval contains zero.
+
+#### 2.2.3 Sensitivity Analysis
+
+Since our model is based on some assumptions, in order to validate our model, we need to apply model diagnostics and sensitivity analysis.
+
+In the assumptions of normality, we use Q-Q plot and Anderson-Darling normality test to check out whether the response variable is normally distributed. In the assumptions of homoscedastic, Residuals vs Fitted plot and Levene's test are used to test the variance of different class groups. 
+
+To obtain more consistent conclusion, we try to relax the assumptions of normality and homogeneity of variance of model. When relaxing the assumption of constant variance, Welch one-way test which is the  for the pairwise comparisons with no assumption of equal variances can be used to further analysis.  Moreover, Kruskal-Wallis rank sum test is a non-parametric method for testing whether samples originate from the same distribution, so we can apply non-parametric alternative to one-way ANOVA test with normality assumption.
+
+## 3. Results
+
+### 3.1 Exploratory Data Analysis
+
+We check the summary statistics of every variables and find there is no abnormal value in the dataset. The proportion of missing values is relatively low, so we can use the data to analyze deeply. The detailed summary statistics are attached in the appendix.
+
+```{r,echo=FALSE,include=FALSE}
+library(table1)
+```
+
+```{r,echo=FALSE,include= FALSE}
+library(AER)
+data(STAR)
+STAR2<-STAR
+
+STAR$star1 <- 
+  factor(STAR$star1, 
+         labels=c('regular','regular+aide','small'))
+```
+
+```{r,echo=FALSE}
+table1(~ gender+ethnicity+read1+math1+lunch1+school1+degree1+ladder1+experience1+tethnicity1| star1, data=STAR2)
+
+```
+
+Since we are required to analyze the effect of different class size on math score in first grade. We assume that the scores in kindergarten have no influence on scores in first grade, so we mainly check out the summary statistics of the data in first grade. From the result,we can see that the quantitative variables don't have unreasonable data. Every type of variables contains low level of missing values, the data are suitable to analyze and have enough statistical power due to the big sample size. And then we can check out some relationships between each variables to choose suitable factors to fit our model.
+
+```{r,echo=FALSE,include=FALSE}
+datg = STAR[,c("gender","math1" )]
+datg = na.omit(datg)
+```
+
+```{r,echo=FALSE}
+boxplot(split(datg[,"math1"],datg[,"gender"]), xlab = "Gender", ylab = "Math Score")
+```
+
+From the boxplot of math score by gender, we can see that gender seems has no influence on the math score since they hold a similar pattern between two groups.
+
+```{r,echo=FALSE,include=FALSE}
+datet = STAR[,c("ethnicity","math1" )]
+datet = na.omit(datet)
+```
+
+```{r,echo=FALSE}
+boxplot(split(datet[,"math1"],datet[,"ethnicity"]), xlab = "Ethnicity", ylab = "Math Score")
+```
+
+From the boxplot of math score by ethnicity, we can see that the ethnicity does have influence on the math score, but maybe it is because the students have different educational background and there are other factors like economics and family background that influence the scores. Therefore we don't consider ethnicity as a predictor factor.
+
+```{r,echo=FALSE}
+plot(STAR[,"math1"],STAR[,"read1"])
+```
+
+From the scatter plot, we can see that the reading score is positively correlated with the math scores. However, the math scores are what we focus on. We assume that the math score of the first grade can't be influenced by reading scores.
+
+```{r,echo=FALSE}
+plot(STAR[,"school1"],STAR[,"star1"],xlab="School Area",ylab="Class Size")
+```
+
+From this graph, we can find that the proportion of class size in different school areas are almost the same.
+
+Base on the exploration above, we choose math1(math score of first graders) and star1 (class size) as our main research object. Since the data contains many missing values, we remove the missing values using list-wise deletion method by R package. 
+
+
+```{r,echo=FALSE,include=FALSE}
+datai = STAR[,c("star1","math1" )]
+datai = na.omit(datai)
+```
+
+```{r,echo=FALSE}
+par(mfrow=c(1,2))
+hist(datai[,"math1"],main="math1",xlab="math1")
+pie<-table(datai[,"star1"])
+lals_pct<- paste(names(pie), "", round(100*pie/sum(pie), 2), "%", sep="")
+pie(pie,lals_pct)
+```
+
+From the histogram, we can see that math1 is almost normal distribution and the class types are evenly distributed. The total sample size is 6600, which is big enough to hold statistical power and statistical inference.
+
+
+### 3.2 Statistical Modelling
+
+#### 3.2.1 Transformation of Response
+
+In order to fit a better model, we try to apply Box-Cox transformation to our response variable. 
+
+```{r, echo= FALSE}
+# Box-Cox transformation
+boxCox(lm(math1~star1,data=dat1))
+```
+
+When we maximize the log-likelihood, the $\lambda$ seems to be close to 0, which means that we should apply log-transformation to math score $Y_{ij}$. In the following step, we use $log(Y_{ij})$ as response variable to fit the one-way ANOVA model.
+
+#### 3.2.2 Model Fitting
+
+```{r, echo=FALSE}
+# fit the one-way ANOVA model with regression form
+fit2 = lm(log(math1) ~ star1, data = dat1)
+# Summary of fit2
+summary(fit2)
+```
+
+The model summary provides most of the information we need to perform statistical inference. The fitted model form is:
+$$
+log(Y_{ij})=6.260795+0.024991x_{2,ij}+0.008121x_{3,ij}
+$$
+From the t-test to each parameter, all estimated parameters in the model is statistically significant. The estimated group means(log-mean) are: $\hat\mu_1=6.260795$ for regular class; $\hat\mu_2=6.285796$ for small class; $\hat\mu_3=6.268916$ for regular class with aide. 
+
+#### 3.2.3 Statistical Testing
+
+Then, we can use ANOVA table and apply F-test to see family-wise difference of math scores in three class size.
+
+```{r, echo=FALSE, include=FALSE}
+# obtain ANOVA table and F-test
+result2 = anova(fit2)
+rownames(result2) = c('Class size', 'Residuals')
+```
+
+```{r, echo=FALSE}
+options(knitr.kable.NA = '')
+kable(result2, caption = 'Table 2 Results of ANOVA analysis')
+```
+
+AS shown in Table 1, class size had a significant effect on students' math score since p-value < 0.05, given the significant level. We are strongly believe that different class size have different impact on math scores of first graders.
+
+```{r, echo=FALSE}
+sum = summary(fit2)
+mean_regular = sum$coefficients[1,1]
+mean_small = sum$coefficients[1,1] + sum$coefficients[2,1]
+mean_regularaid = sum$coefficients[1,1] + sum$coefficients[3,1]
+
+n_regular = summary(dat1$star1)[1]
+n_small = summary(dat1$star1)[2]
+n_regularaid = summary(dat1$star1)[3]
+
+Tuckey = 0.5 ^ 0.5 * qtukey(0.95, 3, length(dat1$math1) - 3)
+Bonf = qt(1 - 0.05/(2*4), length(dat1$math1) - 3)
+Sche = sqrt((3 - 1) * qf(0.95, 3-1, length(dat1$math1) - 3))
+
+# CI of difference between regular and small
+a1 = c((mean_regular - mean_small) - sum$sigma * (1/n_regular + 1/n_small) ^ 0.5 * Sche,
+  (mean_regular - mean_small) + sum$sigma * (1/n_regular + 1/n_small) ^ 0.5 * Sche)
+
+# CI of difference between regular and regularaid
+a2 = c((mean_regular - mean_regularaid) - sum$sigma * (1/n_regular + 1/n_regularaid) ^ 0.5 * Sche,
+  (mean_regular - mean_regularaid) + sum$sigma * (1/n_regular + 1/n_regularaid) ^ 0.5 * Sche)
+
+# CI of difference between small and regularaid
+a3 = c((mean_regularaid - mean_small) - sum$sigma * (1/n_regularaid + 1/n_small) ^ 0.5 * Sche,
+  (mean_regularaid - mean_small) + sum$sigma * (1/n_regularaid + 1/n_small) ^ 0.5 * Sche)
+
+# CI of contrast
+a4 = c((mean_small - 0.5 * mean_regularaid - 0.5 * mean_regular) - sum$sigma * 
+  (1/n_small + 0.25/n_regularaid + 0.25/n_regular) ^ 0.5 * Sche,
+  (mean_small - 0.5 * mean_regularaid - 0.5 * mean_regular) + sum$sigma * 
+  (1/n_small + 0.25/n_regularaid + 0.25/n_regular) ^ 0.5 * Sche)
+
+# Make a table
+library(knitr)
+CI = rbind(a1, a2, a3, a4)
+rownames(CI) = c('Regular - Small', 'Regular - Regular with aide', 'Regular with aide - Small',
+                 'Small - 0.5 (Regular + Regular with aide)')
+colnames(CI) = c('Lower bound', 'Upper bound')
+kable(CI,  caption = 'Table 3 95% confidence intervals of multiple comparisons')
+```
+
+The results of multiple comparison (Table 3) showed that the students in small class tend to have the highest maths score, followed by the students in regular-with-aide class, and regular size class without aide had the lowest score. The mean math score of small size class is higher than the average math scores of regular size class with and without aide.
+
+### 3.3 Sensitivity Analysis
+
+The ANOVA test assumes that, the data are normally distributed and the variance across groups are homogeneous. We can check that with some diagnostic plots.
+
+#### 3.3.1 The Homogeneity of Variance
+
+```{r,echo=FALSE}
+# 1. Residuals vs Fitted plot
+plot(fit2, 1)
+```
+
+In the Residuals vs Fitted plot above, there is no evident relationships between residuals and fitted values (the mean of each groups), which is good. So, we can assume the homogeneity of variances.
+
+```{r, echo=FALSE}
+# 2. Levene??s test
+library(car)
+leveneTest(log(math1) ~ star1, data = dat1)
+```
+
+From the output above we can see that the p-value is not less than the significance level of 0.05. This means that there is no evidence to suggest that the variance across groups is statistically significantly different. Therefore, we can assume the homogeneity of variances in the different kind of classes.
+
+#### 3.3.2 Normality Assumption
+
+```{r, echo= FALSE}
+# 1. Q-Q plot
+plot(fit2, 2)
+```
+
+As all the points fall approximately along this reference line, we can assume normality.
+
+```{r, echo=FALSE}
+# 2. Anderson-Darling normality test
+library(nortest)
+ad.test(residuals(fit2))$p.value
+```
+
+From the Anderson-Darling normality test, which works for larger sample sizes, the normality of random error terms is satisfied since p<0.05, given the significant level 0.05.
+
+#### 3.3.3 Relaxing the homogeneity of variance assumption
+The classical one-way ANOVA test requires an assumption of equal variances for all groups. In our example, the homogeneity of variance assumption turned out to be fine since the Levene test is not significant. Welch one-way test, which is the ANOVA test with no assumption of equal variances can be used to further analysis.
+
+```{r, echo= FALSE}
+# Welch one-way test
+fit3 = oneway.test(log(math1) ~ star1, data = dat1)
+result3 = as.numeric(unlist(fit3)[1:4])
+names(result3) = c('F statistic', 'df of numerator', 'df of denomenator', 'p-value')
+kable(t(result3), caption = 'Table 4 Results of Welch one-way test', align = 'l' )
+
+```
+
+From the Welch one-way test, we can reject the null hypothesis that $\mu_1=\mu_2=\mu_3$
+since $p<0.05$, given the significant level 0.05.
+
+```{r,echo=FALSE}
+# Pairwise comparisons adjusted by the Benjamini-Hochberg method
+fit4 = pairwise.t.test(log(dat1$math1), dat1$star1,p.adjust.method = "BH")
+result4 = unlist(fit4)[c(3,4,6)]
+names(result4) = c('Small vs Regular', 'Regular vs Regular with aide', 'Small vs regular with aide')
+kable(t(result4), caption = 'Table 5 Results of pairwise comparisons adjusted by the Benjamini-Hochberg method', align = 'l' )
+
+```
+
+We can also apply pairwise comparisons adjusted by the Benjamini-Hochberg method.The result is a table of p-values for the pairwise comparisons. Here, the p-values have been adjusted by the Benjamini-Hochberg method. Given the significant level 0.05, we can draw the same conclusions as the one-way ANOVA discussed above.
+
+#### 3.3.4 Non-parametric alternative to one-way ANOVA test
+
+```{r,echo=FALSE}
+fit5 = kruskal.test(log(math1) ~ star1, data = dat1)
+result5 = as.numeric(unlist(fit5)[1:3])
+names(result5) = c('Chi-squared statistic', 'df', 'p-value')
+kable(t(result5), caption = 'Table 6 Results of Kruskal-Wallis rank sum test', align = 'l'  )
+```
+
+Kruskal-Wallis rank sum test is a non-parametric method for testing whether samples originate from the same distribution. Given the significant level 0.05, we can draw the conclusions that math scores in 1st grade students are significantly different in the three classes with different size since $p<0.05$.
+
+
+## 4. Conclusion and Discussion
+
+Our results showed that the small size class had a significant effect on 1st-year student's maths score, and students in small size classes tend to have higher maths score compared with regular class, which is consistent with other research by sensitive analysis. For instance, Folger, & Breda, (1989) reported that the score gains in small classes is around 15% higher than in regular classes for the first graders.The regular-size class with aide also made a difference to students compared with the students in regular-size classes. With the aide, students tend to have higher math scores. 
+
+However, we are unable to conclude that class size causes the increase of student's maths score because there are other factors, such as teacher's capability and school type, may play a more important role in student's test score. In addition, the model we built is based on some assumptions. We assume that the reading scores and math scores are independent but reading skills might affect our understanding of math formula in real life. Many mediators that might affect math scores cannot be eliminate if we relax our basic assumptions. Since the presence of missing values in the data, when we apply list-wise deletion, we might violate the randomized experiment design of the data. In conclusion, causality relationship cannot be directly achieved and more analysis like mediation analysis should be considered to deal with this situation. Further analysis of the data is required to examine the causal effect of class size on student's test scores.
+
+## 5. Reference
+
+Achilles, C. M., Bain, H. P., Bellott, F., Boyd-Zaharias, J., Finn, J., Folger, J., ... & Word, E. (2008). Tennessee's Student Teacher Achievement Ratio (STAR) roject'. URL: http://hdl. handle. net/1902.1/10766.
+
+Dynarski, S., Hyman, J., & Schanzenbach, D. W. (2013). Experimental evidence on the effect of childhood investments on postsecondary attainment and degree completion. Journal of Policy Analysis and Management, 32(4), 692-717.
+
+Folger, J., & Breda, C. (1989). Evidence from Project STAR about class size and student achievement. Peabody Journal of Education, 67(1), 17-33.
+
+Pate-Bain, H., Achilles, C. M., Boyd-Zaharias, J., & McKenna, B. (1992). Class size does make a difference. Phi Delta Kappan, 74, 253-253
+
+Stock, J. H., & Watson, M. W. (2007). Instrumental variable regression. Introduction to econometrics (2nd ed., pp. 421-467). Boston, MA: Pearson-Addison Wesley.
+
+Word, E. R. (1990). The State of Tennessee's Student/Teacher Achievement Ratio (STAR) Project: Technical Report (1985-1990)
+
+## 6. Appendix
+
+```{r,echo=FALSE}
+library(table1)
+library(AER)
+data(STAR)
+attach(STAR)
+STARK<-as.data.frame(cbind(factor(gender),factor(ethnicity),factor(stark),readk,mathk,factor(lunchk),factor(schoolk),factor(degreek),factor(ladderk),experiencek,factor(tethnicityk),rep("stark",dim(STAR)[1])))
+STAR1<-as.data.frame(cbind(factor(gender),factor(ethnicity),factor(star1),read1,math1,factor(lunch1),factor(school1),factor(degree1),factor(ladder1),experience1,factor(tethnicity1),rep("star1",dim(STAR)[1])))
+STAR2<-as.data.frame(cbind(factor(gender),factor(ethnicity),factor(star2),read2,math2,factor(lunch2),factor(school2),factor(degree2),factor(ladder2),experience2,factor(tethnicity2),rep("star2",dim(STAR)[1])))
+STAR3<-as.data.frame(cbind(factor(gender),factor(ethnicity),factor(star3),read3,math3,factor(lunch3),factor(school3),factor(degree3),factor(ladder3),experience3,factor(tethnicity3),rep("star3",dim(STAR)[1])))
+colnames(STARK)<-c("gender","ethnicity","class_size","reading_score","math_score","lunch_type","school_area","degree_of_teacher","ladder","experience","tethnicity","grade")
+colnames(STAR1)<-c("gender","ethnicity","class_size","reading_score","math_score","lunch_type","school_area","degree_of_teacher","ladder","experience","tethnicity","grade")
+colnames(STAR2)<-c("gender","ethnicity","class_size","reading_score","math_score","lunch_type","school_area","degree_of_teacher","ladder","experience","tethnicity","grade")
+colnames(STAR3)<-c("gender","ethnicity","class_size","reading_score","math_score","lunch_type","school_area","degree_of_teacher","ladder","experience","tethnicity","grade")
+detach(STAR)
+new<-rbind(STARK,STAR1,STAR2,STAR3)
+table1(~ factor(gender,labels=c("male","female"))+factor(ethnicity,labels=c("cauc","afam","asian","hispanic","amindian","other"))+as.numeric(reading_score)+as.numeric(math_score)+factor(lunch_type,labels=c("non-free","free"))+factor(school_area,labels=c("inner-city","suburban","rural","urban"))+factor(degree_of_teacher,labels=c("bachelor","master","specialist","phd"))+factor(ladder,labels=c("level1","level2","level3","apprentice","probation","notladder"))+as.numeric(experience)+factor(tethnicity,labels=c("cauc","afam","asian")) | grade*class_size, data=new)
+
+```
+
+
+
+
+
+
+
+
