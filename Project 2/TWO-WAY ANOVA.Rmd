@@ -17,11 +17,42 @@ DATA <- STAR_Student %>%
   group_by(g1tchid,g1classtype,g1schid) %>%
   summarize(math = mean(g1tmathss, na.rm = TRUE)) %>%
   rename(tid = g1tchid, class = g1classtype, sid = g1schid)
-
+DATA$sid<-as.factor(DATA$sid)
+DATA$class<-as.factor(DATA$class)
 ```
 
 ```{r}
-## Two-way ANOVA
-plot(table(DATA$sid))
-table(DATA$sid,DATA$tid)
+## Two-way ANOVA With interaction
+res.aovt <- aov(math ~ class + sid + class*sid, data = DATA)
+summary(res.aovt) 
+# interaction term is not significant (Since class size and school id are independent)
+
+
+## Two-way ANOVA without interaction
+res.aov <- aov(math ~ class + sid, data = DATA)
+summary(res.aov) 
+# family-wise -> significance
+# the class size is significantly associated with math scores
+# the school id is significantly associated with math scores
+```
+
+
+```{r}
+### Model Diagnostics ###
+
+## 1. Normality
+# plot test: heavy-tailed
+plot(res.aov, 2)
+
+
+## 2. Homogeneity of variances
+# plot test: hard to distinguish pattern -> use other method
+plot(res.aov, 1)
+
+# Use the Levene’s test to check the homogeneity of variances. 
+library(car)
+leveneTest(math ~ class*sid, data = DATA)
+# p<0.05, this means that it is evident to suggest that the variance across groups is statistically significantly different.
+
+## Conclusion: non-normality, non-constant variance.
 ```
