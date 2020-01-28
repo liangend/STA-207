@@ -1,0 +1,27 @@
+---
+title: "Two-way ANOVA"
+author: "Zhikuan Quan"
+date: "01/27/2020"
+output: html_document
+---
+
+```{r}
+## Input Data
+library(haven)
+library(tidyverse)
+STAR_Student <- read_sav("STAR_Students.sav")
+
+DATA <- STAR_Student %>%
+  select(g1classtype,g1tmathss,g1tchid,g1schid) %>%
+  filter(complete.cases(.)) %>%
+  group_by(g1tchid,g1classtype,g1schid) %>%
+  summarize(math = mean(g1tmathss, na.rm = TRUE)) %>%
+  rename(tid = g1tchid, class = g1classtype, sid = g1schid)
+
+```
+
+```{r}
+## Two-way ANOVA
+plot(table(DATA$sid))
+table(DATA$sid,DATA$tid)
+```

@@ -34,3 +34,30 @@ STAR1 <- STAR %>%
 STARF1 <- STAR1 %>%
   filter(complete.cases(STAR1))
 ```
+
+```{r}
+# One teacher teaches in one type of class
+START <- STAR_Student %>%
+  select(g1classtype,g1tchid) %>%
+  transmute(class = as.factor(g1classtype), id = as.factor(g1tchid)) %>%
+  filter(complete.cases(.))
+
+# One teacher teaches in one school
+STARTT <- STAR_Student %>%
+  select(g1tchid,g1schid) %>%
+  transmute(school = as.factor(g1schid), id = as.factor(g1tchid)) %>%
+  filter(complete.cases(.))
+
+```
+
+```{r}
+# Get data of teacherid(tid), classtype(class), schoolid(sid), mathscore(math)
+# Teacher as a unit
+DATA <- STAR_Student %>%
+  select(g1classtype,g1tmathss,g1tchid,g1schid) %>%
+  filter(complete.cases(.)) %>%
+  group_by(g1tchid,g1classtype,g1schid) %>%
+  summarize(math = mean(g1tmathss, na.rm = TRUE)) %>%
+  rename(tid = g1tchid, class = g1classtype, sid = g1schid)
+```
+
