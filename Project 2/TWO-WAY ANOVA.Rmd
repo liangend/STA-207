@@ -48,6 +48,10 @@ plot(res.aov, 2)
 ## 2. Homogeneity of variances
 # plot test: hard to distinguish pattern -> use other method
 plot(res.aov, 1)
+# Anderson-Darling normality test
+library(nortest)
+ad.test(residuals(res.aov))$p.value
+# p<0.05, reject H0, so residuals are not normally distributed.
 
 # Use the Levene’s test to check the homogeneity of variances. 
 library(car)
