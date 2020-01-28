@@ -1,0 +1,52 @@
+---
+title: "Assessing the Effect of Class Size on Math Scores of the First Graders"
+output:
+   html_document:
+    df_print: paged
+    fig_caption: yes
+    number_sections: yes
+---
+# Introduction
+
+# Data Description
+The original data of 1st grade math scores were explored after removing all the missing data, resulting in 6598 observations with full information of class size, teacher ID and school ID. As shown in Figure 1 and Table 1, the distribution of math scores was nearly symmetric, and the median and mean were very close. Therefore, average math scores of students taught by each teacher were obtained for further data analysis. 
+
+```{r, echo=FALSE, include=FALSE}
+library(foreign)
+star = read.spss("C:/Users/lgrey/Desktop/STA 207/Project 2/PROJECT+STAR/STAR_Students.sav",
+                 to.data.frame = TRUE)
+dat = star[c('g1schid', 'g1tchid', 'g1classtype', 'g1tmathss')]
+dat1 = na.omit(dat)
+library(knitr)
+sum_sta = round(append(summary(dat1$g1tmathss)[c(1,6,3,4)], sd(dat1$g1tmathss)), 2)
+names(sum_sta) = c('Minimum', 'Maximum', 'Median', 'Mean', 'SD')
+```
+
+__Table 1 Summary statistics of 1st grade math scores__
+
+```{r, echo=FALSE}
+kable(t(sum_sta))
+```
+
+```{r, echo=FALSE}
+plot(density(dat1$g1tmathss), main = '', xlab = 'Math scores of 1st grade student')
+```
+
+__Figure 1 Distribution of 1st grade math scores__
+
+As shown in Figure 2, the number of math score observed for each teacher ranged from 11 to 29, with most teachers having 20 to 24 observations (45 %), which might indicate that no teacher taught more than one class. The distribution of mean math score of students taught by each teacher is shown in Figure 3, which is also symmetric like a normal distribution.
+
+```{r, echo=FALSE}
+dat2 = aggregate(g1tmathss ~ g1tchid * g1classtype * g1schid, data = dat1, mean)
+dat3 = table(dat1$g1tchid)
+hist(dat3, main = '', xlab = 'Number of students taught by one teacher') 
+```
+
+__Figure 2 Histogram of the number of math score observed for each teacher__
+
+```{r, echo=FALSE}
+plot(density(dat2$g1tmathss), main = '', xlab = 'Mean math scores of students taught by each teacher ')
+```
+
+__Figure 3 Distribution of mean math score of students taught by each teacher__
+
