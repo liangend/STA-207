@@ -9,7 +9,7 @@ output:
 # Introduction
 
 # Data Description
-The original data of 1st grade math scores were explored after removing all the missing data, resulting in 6598 observations with full information of class size, teacher ID and school ID. As shown in Figure 1 and Table 1, the distribution of math scores was nearly symmetric, and the median and mean were very close. Therefore, average math scores of students taught by each teacher were obtained for further data analysis. 
+The original data of 1st grade math scores were explored after removing all the missing data, resulting in 6598 observations with full information of class size, teacher ID and school ID. The summary statistics of math score are shown in Table 1. In order to make causal inference on the effect of class size on math score, Stable Unit Treatment Value Assumption (SUTVA) has to hold. Therefore, teacher (or class) was used as the unit of analysis instead of individual student, to avoid the interaction among students within one class. As shown in Figure 1, the median and mean scores for each class were very close. Mean and median are both good summary statistics in this case, but average score is more often used to evaluate a class or a teacher. Therefore, mean math scores of students taught by each teacher were calculated for further data analysis. 
 
 ```{r, echo=FALSE, include=FALSE}
 library(foreign)
@@ -28,17 +28,21 @@ __Table 1 Summary statistics of 1st grade math scores__
 kable(t(sum_sta))
 ```
 
-```{r, echo=FALSE}
-plot(density(dat1$g1tmathss), main = '', xlab = 'Math scores of 1st grade student')
-```
-
-__Figure 1 Distribution of 1st grade math scores__
-
-As shown in Figure 2, the number of math score observed for each teacher ranged from 11 to 29, with most teachers having 20 to 24 observations (45 %), which might indicate that no teacher taught more than one class. The distribution of mean math score of students taught by each teacher is shown in Figure 3, which is also symmetric like a normal distribution.
 
 ```{r, echo=FALSE}
 dat2 = aggregate(g1tmathss ~ g1tchid * g1classtype * g1schid, data = dat1, mean)
 dat3 = table(dat1$g1tchid)
+dat4 = aggregate(g1tmathss ~ g1tchid * g1classtype * g1schid, data = dat1, median)
+plot(dat2$g1tmathss, type = 'l', col = 4, xlab = 'Teacher (or class)', ylab = 'Math score')
+lines(dat4$g1tmathss, col = 2)
+legend('topleft', legend = c('Mean', 'Meidan'), col = c(4, 2), lty = c(1, 1))
+```
+
+__Figure 1 Means and medians of maths scores for each teacher__
+
+339 mean math scores of each teacher were obtained, with 3 class sizes in 76 different schools. As shown in Figure 2, the number of math score observed for each teacher ranged from 11 to 29, with most teachers having 20 to 24 observations (45 %). The distribution of mean math score is shown in Figure 3, which is nearly symmetric. The data obtained was unbalanced as each school had different number of each class size, which might cause unequal variances in data analysis. This issue will be discussed in the following.
+
+```{r, echo=FALSE}
 hist(dat3, main = '', xlab = 'Number of students taught by one teacher') 
 ```
 
