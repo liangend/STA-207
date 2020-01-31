@@ -20,7 +20,7 @@ DATA <- STAR_Student %>%
   select(g1classtype,g1tmathss,g1tchid,g1schid) %>%
   filter(complete.cases(.)) %>%
   group_by(g1tchid,g1classtype,g1schid) %>%
-  summarize(math = median(g1tmathss, na.rm = TRUE)) %>%
+  summarize(math = mean(g1tmathss, na.rm = TRUE)) %>%
   rename(tid = g1tchid, class = g1classtype, sid = g1schid)
 DATA$sid<-as.factor(DATA$sid)
 DATA$class<-as.factor(DATA$class)
@@ -54,7 +54,7 @@ summary(res.aov)
 ## 1. Normality
 # plot test: heavy-tailed
 plot(res.aov, 2)
-
+ad.test(residuals(res.aov))
 
 ## 2. Homogeneity of variances
 # plot test: hard to distinguish pattern -> use other method
@@ -64,7 +64,7 @@ ad.test(residuals(res.aov))$p.value
 # p<0.05, reject H0, so residuals are not normally distributed.
 
 # Use the Levene’s test to check the homogeneity of variances. 
-leveneTest(math ~ class*sid, data = DATA)
+leveneTest(math ~ sid*class, data=DATA)
 # p<0.05, this means that it is evident to suggest that the variance across groups is statistically significantly different.
 
 ## Conclusion: non-normality, non-constant variance.
@@ -92,11 +92,13 @@ anova(reduced_model,full_model)
 DATA1<-data.frame(math = rank(DATA$math), class = rank(DATA$class),id =rank(DATA$sid))
 summary(aov(math~class+id,data=DATA1))
 
-friedman.test(math ~ class | sid, data = DATA1)
+#friedman.test(math ~ class | sid, data = DATA1)
 
-table(DATA$class)
-kruskal.test(math , class, data = DATA)
+#table(DATA$class)
+#kruskal.test(math , class, data = DATA)
 
 
 scheirerRayHare(math ~ class + sid, data = DATA)
+
+dunnTest(math ~ class, data=DATA, method="bh") 
 ```
