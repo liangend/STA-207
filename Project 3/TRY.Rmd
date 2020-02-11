@@ -1,0 +1,64 @@
+---
+title: "TRY"
+author: "Zhikuan Quan"
+output: html_document
+---
+
+# Background
+Research shows the tax on alcohol consumption, minimum drinking age, punishment, personal income, and unemployment rate are associated with drunk driving fatalities.
+
+```{r}
+# Input Data
+library(AER)
+library(plm)
+library(stargazer)
+library(tidyverse)
+data("Fatalities")
+# Missing Values
+# since 1982-1988 is no, we assume it is "no" in missing place(Need some paper/law to ensure)
+tna<-which(is.na(Fatalities),arr.ind= TRUE) # CA 1988 missing: jail, service
+Fatalities[28,15]<-"no" 
+
+
+```
+
+# Exploratory Data Analysis
+```{r}
+# DATA of interest
+DATA<-Fatalities %>%
+  #filter(complete.cases(.)) %>%
+  select(nfatal,pop,jail,state,year,beertax,emppop,miles,income,drinkage) %>%
+  transmute(fr = 10000*nfatal/pop, jail = as.factor(jail),state = as.factor(state), year = as.factor(year),beertax = beertax,emppop = emppop,miles = miles,income = log(income),drinkage = as.factor(floor(drinkage)))
+# summary statistics for data: balanced
+summary(DATA) # no extreme values
+attach(DATA)
+tjs<-table(state,jail) # jail of CT, NV, OH, OR, SC, UT changes over time
+detach(DATA)
+# 
+ggplot(DATA, aes(x = year, y = fr, group = jail, col = jail)) + 
+  geom_point() + stat_summary(fun.y = mean, geom = "line")
+```
+
+# Modeling
+We set the model notations as below:
+
+- Response variable $Y_{it}$: the traffic fatality rate of state $i$ in time $t$;
+
+- Time fixed effect $\alpha_t$: time specific intercept(a vector of dummy variables). It represents any change over time (1982-1988) that affects all observational units in the same way;
+
+- Mandatory jail sentence indicator $X_{it}$: $X_{it}=1$ when there is mandatory jail sentence of state $i$ in time $t$; $X_{it}=0$ when there is no mandatory jail sentence of state $i$ in time $t$;  
+
+- Covariates vector $Z_{it}$: potential time-varying covariates. In this case, we mainly focus on XXXX.
+
+- State fixed effect $S_i$: In this case, each level of $S_i$ represents one of 48 states in US excluding Alaska and Hawaii.
+
+The fixed effect model equation is:
+$$Y_{it}=\alpha_t+\beta X_{it}+\gamma Z_{it}+S_i+\epsilon_{it}$$
+where $\epsilon_{it}$ is error term. In fixed effect model, we assume that:
+
+
+
+```{r}
+fit1 <- plm(fr ~ jail, data = DATA, index = c("state", "year"),model = "within", effect = "twoways")
+summary(fit1)
+```
