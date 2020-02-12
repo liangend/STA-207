@@ -27,15 +27,18 @@ Fatalities[28,15]<-"no"
 # DATA of interest
 DATA<-Fatalities %>%
   #filter(complete.cases(.)) %>%
-  select(nfatal,pop,jail,state,year,beertax,emppop,miles,income,drinkage) %>%
-  transmute(fr = 10000*nfatal/pop, jail = as.factor(jail),state = as.factor(state), year = as.factor(year),beertax = beertax,emppop = emppop,miles = miles,income = log(income),drinkage = as.factor(floor(drinkage)))
+  transmute(fr = 10000*((fatal/pop)), jail = as.factor(jail),state = as.factor(state), year = as.factor(year),beertax = beertax,emppop = emppop,miles = miles,income = income,drinkage = as.factor(floor(drinkage)), unemp=unemp, spirits = spirits,service = as.factor(service),breath=as.factor(breath),afatal=10000*(afatal/pop))
 # summary statistics for data: balanced
 summary(DATA) # no extreme values
 attach(DATA)
 tjs<-table(state,jail) # jail of CT, NV, OH, OR, SC, UT changes over time
 detach(DATA)
+
+DATA1<-DATA %>%
+  filter(state == "ct"|state =="nv"|state =="oh"|state =="or"|state =="sc"|state =="ut")
+
 # 
-ggplot(DATA, aes(x = year, y = fr, group = jail, col = jail)) + 
+ggplot(DATA, aes(x = year, y = afatal, group = jail, col = jail)) + 
   geom_point() + stat_summary(fun.y = mean, geom = "line")
 ```
 
@@ -56,9 +59,57 @@ The fixed effect model equation is:
 $$Y_{it}=\alpha_t+\beta X_{it}+\gamma Z_{it}+S_i+\epsilon_{it}$$
 where $\epsilon_{it}$ is error term. In fixed effect model, we assume that:
 
+1. The normality of error terms:
+
+2. The homogeneity of variance assumption:
+
+3. Independent assumption: in time series data, the error terms are allowed to be autocorrelated within states, which means that there is autocorrelation relationship across time in one specific state. However, in a fixed time, the 
+
 
 
 ```{r}
-fit1 <- plm(fr ~ jail, data = DATA, index = c("state", "year"),model = "within", effect = "twoways")
+
+#cor(DATA[,c(1,5,6,7,8,10,11)])
+# Model 1
+fit1 <- plm(fr ~ jail+unemp+beertax+income+spirits, data = DATA, index = c("state","year"),model = "within", effect = "twoways")
 summary(fit1)
+
+# Model 1
+fit1 <- plm(fr ~ jail+unemp+income+spirits, data = DATA, index = c("state","year"),model = "within", effect = "twoways")
+summary(fit1)
+
+# Model: Non-normality
+fit1 <- plm(afatal ~ jail+beertax+spirits, data = DATA, index = c("state","year"),model = "within", effect = "twoways")
+summary(fit1)
+
+```
+
+```{r}
+## Model Diagnositics
+sr<-scale(residuals(fit1))
+preds<-predict(fit1)
+# Normality
+qqnorm(sr, ylab = 'Standard Residuals')
+qqline(sr)
+
+shapiro.test(as.vector(sr))
+
+
+hist(residuals(fit1), xlab = 'Residuals')
+
+# test for time effect and state effect
+plmtest(fit1, c("time"), type=("bp"))
+plmtest(fit1, c("individual"), type=("bp"))
+plmtest(fit1, c("twoways"), type=("bp"))
+
+
+pbgtest(fit1)
+
+
+
+## Constant Variance
+plot(as.vector(residuals(fit1)))
+bptest(fit1)
+
+
 ```
