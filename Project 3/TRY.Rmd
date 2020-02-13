@@ -23,6 +23,61 @@ Fatalities[28,15]<-"no"
 ```
 
 # Exploratory Data Analysis
+## Data exploration
+This study used a balanced panel data for the 48 states in United States (excluding Alaska, Hawaii, and the District of Columbia) from 1982 to 1988, with 336 observations in total. The vehicl fatality rate per year of each state was calculated by dividing the number of vehicle fatalities by state population, then multiplying by 10000 to represent the average fatality every 10000 people. As shown in Figure 1, the average fatality rates over 7 years are quite different across the country. Rhode Island has the lowest fatality rate (1.11) while New Mexico has the highest (3.65).  
+```{r, echo=FALSE, include=FALSE}
+library(AER)
+data("Fatalities")
+dat = Fatalities
+dat$y = dat$fatal/dat$pop * 10000
+dat00 = aggregate(y~state, data = dat, mean)
+fatal_state = data.frame(fatality = dat00$y, state = unique(dat$state)) 
+library(usmap)
+library(ggplot2)
+p1 = plot_usmap(regions = 'state', data = fatal_state, values = "fatality",
+     exclude = c('AK', 'HI'))+ scale_fill_continuous(high = "#132B43", low = "#56B1F7", 
+                name = "Average fatality") + theme(legend.position = "right")
+```
+
+```{r, echo=FALSE}
+p1
+```
+
+__Figure 1 Average fatality rates over 1982 through 1988 across United States__
+
+Unemployment rate (unemp), spirits consumption (spirits), per capita income (income), tax on beer (beertax) and mandatory jail sentence for the first DUI conviction (jail) were shown as important factors affecting the vehicle fatality rate (Ruhm, 1996), so they were also considered in this study. As shown in Figure 2, the average per capita income across the country kept increasing from 1982 to 1988, while spirits consumption,unemployment rate and tax on beer decreased. Average fatality stayed rather stable over 7 years, and states having mandatory jail sentence seems to have higher average fatality than those not (Figure 3), which is surprising and will be analyzed in the following. There was one missing value of mandatory jail sentence status for California in 1988, which was replaced with "no" after searching the online information and double-checking with the local government. Per capita income was removed from the statistic model to avoid collinearity because it has a high correlation (-0.55) with unemployment rate, and is more correlated to other variables than unemployment rate (Figure 4).
+
+```{r, echo=FALSE}
+par(mfrow = c(2,2))
+dat01 = aggregate(income~year,data = dat, mean)
+plot(1982:1988, dat01$income, type = 'b', xlab = 'Year',
+     ylab = 'Per capita income, $', main = 'Income')
+dat02 = aggregate(spirits~year,data = dat, mean)
+plot(1982:1988, dat02$spirits, type = 'b', xlab = 'Year',
+     ylab = 'Per capita spirits consumption, gal', main = 'Spirits consumption')
+dat03 = aggregate(unemp~year,data = dat, mean)
+plot(1982:1988, dat03$unemp, type = 'b', xlab = 'Year',
+     ylab = 'Unemployment rate, %', main = 'Unemployment rate')
+dat04 = aggregate(beertax~year,data = dat, mean)
+plot(1982:1988, dat04$beertax, type = 'b', xlab = 'Year',
+     ylab = 'Tax on case of beer, $', main = 'Beer tax')
+```
+
+__Figure 2 The trends of income, spirits comsumption, unemployment rate and tax on beer from 1982 to 1988__
+
+```{r, echo=FALSE}
+ggplot(dat, aes(x = year, y = y, fill = jail)) + geom_boxplot() + labs(y = "Average fatality")
+```
+
+__Figure 3 The effect of mandatory jail sentence on average fatality from 1982 to 1988__
+
+```{r, echo=FALSE}
+dat1 = dat[lapply(dat, typeof)== 'double']
+plot(dat1[,c(1,2,3,5)])
+```
+
+__Figure 4 Pairwise correlation among income, spirits comsumption, unemployment rate and tax on beer__
+
 ```{r}
 # DATA of interest
 DATA<-Fatalities %>%
