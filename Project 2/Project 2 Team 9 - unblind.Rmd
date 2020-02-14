@@ -210,7 +210,7 @@ In project 1, we find different class types have different teaching qualities. T
 The biggest difference between the two projects is different randomization approaches. Project 1 is a completely randomized experiment while project 2 is a stratified randomized experiment. Stratification rules out the nuisance factors that affects the outcomes of the response variable (Imbens & Rubin, 2015). Therefore, project 2 can estimate the effects of class types without the influence of the different types of schools that may cause different results between the two projects.
 
 # Reference
-Achilles, C. M., Bain, H. P., Bellott, F., Boyd-Zaharias, J., Finn, J., Folger, J., ??? & Word, E. (2008). Tennessee’s Student Teacher Achievement Ratio (STAR) roject???. URL: http://hdl. handle. net/1902.1/10766.
+Achilles, C. M., Bain, H.P., Bellott, F., Boyd-Zaharias, J., Finn, J., Folger, J., ??? & Word, E. (2008). Tennessee’s Student Teacher Achievement Ratio (STAR) roject???. URL: http://hdl. handle. net/1902.1/10766.
 
 Imbens, G. W., & Rubin, D. B. (2015). Causal inference in statistics, social, and biomedical sciences. Cambridge University Press.
 
